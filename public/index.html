@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Comments Extractor</title>
+    <link rel="icon" href="img/svg/4.svg" type="image/svg+xml">
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .api-choice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .api-choice input[type="radio"] {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            width: 300px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #comments-container {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .comment {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .comment-date {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .reply {
+            margin-left: 20px;
+            border-left: 2px solid #eee;
+            padding: 10px;
+            margin-top: 5px;
+        }
+
+        .reply-author {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .reply-date {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .reply-form {
+            margin-right: 15px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .reply-form textarea {
+
+            width: 100%;
+            height: 50px;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .reply-button {
+            margin-right: 15px;
+            background-color: #007bff;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .reply-button:hover {
+            background-color: #0056b3;
+        }
+
+        #loading-message {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+        }
+
+        #error-message {
+            text-align: center;
+            color: red;
+        }
+
+        .comment-actions {
+            display: flex;
+            flex-direction: row;
+            margin-top: 5px;
+            justify-content: flex-end;
+        }
+
+        #options-panel {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #f8f9fa;
+            padding: 20px;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        #options-panel.open {
+            left: 0;
+        }
+
+        #options-panel h2 {
+            margin-bottom: 20px;
+            color: #007bff;
+            text-align: center;
+        }
+
+        #options-panel label {
+            margin-top: 10px;
+            font-weight: normal;
+
+        }
+
+        #options-panel input[type="text"],
+        #options-panel input[type="number"] {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #options-panel button {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #options-panel button:hover {
+            background-color: #1e7e34;
+        }
+
+        #open-options-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            z-index: 1001;
+        }
+
+        #open-options-button:hover {
+            background-color: #0056b3;
+        }
+
+        #save-comments-button {
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #save-comments-button:hover {
+            background-color: #1e7e34;
+        }
+
+        .save-comment-button {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .save-comment-button:hover {
+            background-color: #1e7e34;
+        }
+
+        .like-count {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-left: 5px;
+            display: inline-block;
+        }
+
+        .comment-actions {
+            height: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>The Vision of YouTube comments</h1>
+    <button id="open-options-button">Options</button>
+    <div id="options-panel">
+        <h2>Options</h2>
+        <label for="filter-author">Комментарии определенного автора:</label>
+        <input type="text" id="filter-author" placeholder="Имя автора">
+
+        <label for="search-phrase">Поиск фразы:</label>
+        <input type="text" id="search-phrase" placeholder="Поиск фразы">
+
+        <label for="start-time">Начало периода</label>
+        <input type="text" id="start-time" placeholder="Начало периода (YYYY-MM-DDTHH)">
+
+        <label for="end-time">Конец периода </label>
+        <input type="text" id="end-time" placeholder="Конец периода (YYYY-MM-DDTHH)">
+
+        <label for="max-results-options">Количество комментариев</label>
+        <input type="number" id="max-results-options" value="500">
+
+        <label for="video-id_options">Video ID:</label>
+        <input type="text" id="video-id_options" placeholder="ID видео (можно несколько через запятую)">
+
+        <button id="apply-options-button">apply</button>
+    </div>
+
+    <div class="api-choice">
+        <input type="radio" id="use-own-api" name="api-choice" value="own" checked>
+        <label for="use-own-api">Использовать свой API ключ</label>
+        <input type="radio" id="use-built-in-api" name="api-choice" value="built-in">
+        <label for="use-built-in-api">Использовать встроенный API ключ</label>
+    </div>
+
+
+    <label for="api-key">API Key:</label>
+    <input type="text" id="api-key"><br>
+
+    <label for="video-id">Video ID:</label>
+    <input type="text" id="video-id"><br>
+    <button id="get-comments-button">Get Comments</button>
+
+    <div id="loading-message" style="display: none;">Загрузка...</div>
+    <div id="error-message" style="display: none;"></div>
+
+    <div id="comments-container"></div>
+    <button id="save-comments-button" style="display: none;">Сохранить комментарии</button>
+
+
+    <script>
+     const getCommentsButton = document.getElementById('get-comments-button');
+const apiKeyInput = document.getElementById('api-key');
+const videoIdInput = document.getElementById('video-id');
+const videoIdInput_options = document.getElementById('video-id_options');
+const commentsContainer = document.getElementById('comments-container');
+const loadingMessage = document.getElementById('loading-message');
+const errorMessage = document.getElementById('error-message');
+const useOwnApiRadio = document.getElementById('use-own-api');
+const useBuiltInApiRadio = document.getElementById('use-built-in-api');
+const builtInApiKey = 'YUOR_KEY'; // Встроенный ключ
+const maxResultsInput = document.getElementById('max-results-options');
+const optionsPanel = document.getElementById('options-panel');
+const openOptionsButton = document.getElementById('open-options-button');
+const applyOptionsButton = document.getElementById('apply-options-button');
+const filterAuthorInput = document.getElementById('filter-author');
+const searchPhraseInput = document.getElementById('search-phrase');
+const saveCommentsButton = document.getElementById('save-comments-button');
+const startTimeInput = document.getElementById('start-time');
+const endTimeInput = document.getElementById('end-time');
+let currentComments = [];
+
+function toggleApiKeyInput() {
+    if (useOwnApiRadio.checked) {
+        apiKeyInput.disabled = false;
+    } else {
+        apiKeyInput.disabled = true;
+    }
+}
+toggleApiKeyInput();
+useOwnApiRadio.addEventListener('change', toggleApiKeyInput);
+useBuiltInApiRadio.addEventListener('change', toggleApiKeyInput);
+
+openOptionsButton.addEventListener('click', () => {
+    optionsPanel.classList.toggle('open');
+});
+
+applyOptionsButton.addEventListener('click', () => {
+    optionsPanel.classList.remove('open');
+    getFilteredComments();
+});
+
+saveCommentsButton.addEventListener('click', async () => {
+    if (currentComments.length === 0) {
+        alert('Нет комментариев для сохранения.');
+        return;
+    }
+    try {
+        const response = await fetch('/save-comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ comments: currentComments })
+        });
+
+        if (!response.ok) {
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: `Ошибка: ${response.status} ${response.statusText}` };
+            }
+            throw new Error(`Ошибка сохранения: ${response.status} ${errorData.error}`);
+        }
+
+        const data = await response.json();
+        alert(`Комментарии сохранены в файл: ${data.filename}`);
+    } catch (error) {
+        errorMessage.textContent = `Ошибка при сохранении комментариев: ${error.message}`;
+        errorMessage.style.display = 'block';
+    }
+});
+
+async function saveComment(comment) {
+    try {
+        const response = await fetch('/save-comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ comment: comment })
+        });
+        if (!response.ok) {
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: `Ошибка: ${response.status} ${response.statusText}` };
+            }
+            throw new Error(`Ошибка сохранения: ${response.status} ${errorData.error}`);
+        }
+
+
+        const data = await response.json();
+        alert(`Комментарий сохранен в файл: ${data.filename}`);
+    } catch (error) {
+        errorMessage.textContent = `Ошибка при сохранении комментария: ${error.message}`;
+        errorMessage.style.display = 'block';
+    }
+}
+
+function displayError(message) {
+    errorMessage.textContent = message || '';
+    errorMessage.style.display = message ? 'block' : 'none';
+}
+
+function displayComments(comments) {
+    commentsContainer.innerHTML = '';
+    if (comments && comments.length > 0) {
+      comments.forEach(comment => {
+            const commentDiv = document.createElement('div');
+            commentDiv.classList.add('comment');
+            commentDiv.innerHTML = `
+                <div class="comment-author">${comment.author}</div>
+                <div class="comment-date">${comment.publishedAt}</div>
+                <div>${comment.text}</div>  
+                <div class="like-count">👍${comment.likeCount}</div>
+                <div class="comment-actions">
+                    <button class="reply-button" data-comment-id="${comment.id}">Ответить</button>
+                    <button class="save-comment-button" data-comment-id="${comment.id}">Сохранить</button>
+                </div>
+            `;
+
+           const replyForm = document.createElement('div');
+           replyForm.classList.add('reply-form');
+           replyForm.style.display = 'none';
+            replyForm.innerHTML = `
+                <textarea placeholder="Ваш ответ"></textarea>
+                <button class="submit-reply-button" data-comment-id="${comment.id}">Отправить ответ</button>
+            `;
+           commentDiv.appendChild(replyForm);
+
+          if (comment.replies && comment.replies.length > 0) {
+              comment.replies.forEach(reply => {
+                  const replyDiv = document.createElement('div');
+                  replyDiv.classList.add('reply');
+                   replyDiv.innerHTML = `
+                        <div class="reply-author">${reply.author}</div>
+                        <div class="reply-date">${reply.publishedAt}</div>
+                        <div>${reply.text}</div>
+                  `;
+                  commentDiv.appendChild(replyDiv);
+              });
+          }
+         commentsContainer.appendChild(commentDiv);
+        });
+
+       const replyButtons = document.querySelectorAll('.reply-button');
+        replyButtons.forEach(button => {
+            button.addEventListener('click', function(){
+              const commentDiv = this.closest('.comment')
+             const replyForm = commentDiv.querySelector('.reply-form');
+              replyForm.style.display = replyForm.style.display === 'none' ? 'flex' : 'none';
+            });
+        });
+
+        const saveCommentButtons = document.querySelectorAll('.save-comment-button');
+        saveCommentButtons.forEach(button => {
+             button.addEventListener('click', function(){
+               const commentId = this.getAttribute('data-comment-id');
+              const commentToSave =  currentComments.find(comment => comment.id === commentId);
+                saveComment(commentToSave)
+            });
+        });
+       const submitReplyButtons = document.querySelectorAll('.submit-reply-button');
+        submitReplyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                alert('Эта функция не реализована. Для отправки ответа, нужно использовать OAuth 2.0 авторизацию.');
+            });
+        })
+       saveCommentsButton.style.display = 'block';
+    } else {
+     commentsContainer.innerHTML = 'Комментарии не найдены.';
+     saveCommentsButton.style.display = 'none';
+    }
+}
+
+
+function extractVideoId(input) {
+    try {
+      const url = new URL(input);
+      if (url.hostname === 'www.youtube.com' || url.hostname === 'youtube.com') {
+        const params = new URLSearchParams(url.search);
+        const videoId = params.get('v');
+        if (videoId) {
+          return videoId;
+        }
+      } else if (url.hostname === 'youtu.be') {
+        const path = url.pathname.slice(1);
+        return path;
+      }
+
+    } catch (e) {
+      // Если не URL, считаем, что это ID
+     return input;
+    }
+    return input;
+
+}
+
+async function getComments() {
+    let apiKey;
+    if (useOwnApiRadio.checked) {
+        apiKey = apiKeyInput.value;
+    } else {
+        apiKey = builtInApiKey;
+    }
+   let videoId = videoIdInput.value.trim();
+     videoId = extractVideoId(videoId);
+
+    const maxResults = parseInt(maxResultsInput.value);
+    commentsContainer.innerHTML = "";
+    errorMessage.style.display = 'none';
+
+    if (!videoId) {
+        errorMessage.textContent = 'Пожалуйста, заполните Video ID.';
+        errorMessage.style.display = 'block';
+        return;
+    }
+    if (useOwnApiRadio.checked && !apiKey) {
+        errorMessage.textContent = 'Пожалуйста, заполните API Key.';
+        errorMessage.style.display = 'block';
+        return;
+    }
+
+    loadingMessage.style.display = 'block';
+
+    try {
+        const response = await fetch('/get-comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ apiKey: apiKey, videoId: videoId, maxResults: maxResults })
+        });
+
+        if (!response.ok) {
+            loadingMessage.style.display = 'none';
+            const errorData = await response.json();
+            throw new Error(`Ошибка: ${response.status} ${errorData.error}`);
+        }
+        const data = await response.json();
+        loadingMessage.style.display = 'none';
+        if (data.comments && data.comments.length > 0) {
+            currentComments = data.comments;
+            displayComments(data.comments);
+        } else {
+            commentsContainer.innerHTML = 'Комментарии не найдены.';
+            saveCommentsButton.style.display = 'none';
+        }
+
+    } catch (error) {
+        loadingMessage.style.display = 'none';
+        errorMessage.textContent = `Ошибка при получении комментариев: ${error.message}`;
+        errorMessage.style.display = 'block';
+    }
+}
+
+async function getFilteredComments() {
+    const apiKey = useOwnApiRadio.checked ? apiKeyInput.value : builtInApiKey;
+    let videoIdsInput = videoIdInput_options.value;
+    const videoIds = videoIdsInput.split(',').map(id => extractVideoId(id.trim())).filter(id => id);
+    const maxResults = parseInt(document.getElementById('max-results-options').value) || 500;
+    const filterAuthor = document.getElementById('filter-author').value.trim().toLowerCase();
+    const searchPhrase = document.getElementById('search-phrase').value.trim().toLowerCase();
+    const startTime = document.getElementById('start-time').value;
+    const endTime = document.getElementById('end-time').value;
+
+    if (!videoIds || videoIds.length === 0) {
+        displayError('Пожалуйста, заполните Video ID в опциях.');
+        return;
+    }
+    if (isNaN(maxResults) || maxResults <= 0) {
+        displayError('Некорректное значение maxResults');
+        return;
+    }
+
+      if(useOwnApiRadio.checked && !apiKey) {
+          displayError('Пожалуйста, заполните API Key.');
+          return;
+      }
+
+
+    commentsContainer.innerHTML = "";
+    displayError(null);
+    loadingMessage.style.display = 'block';
+
+    try {
+        let allComments = [];
+        for (const videoId of videoIds) {
+            const response = await fetch('/get-comments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ apiKey: apiKey, videoId: videoId, maxResults: maxResults })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Ошибка: ${response.status} ${errorData.error}`);
+            }
+
+            const data = await response.json();
+            if (data.comments && data.comments.length > 0) {
+                allComments = allComments.concat(data.comments);
+            }
+        }
+
+        loadingMessage.style.display = 'none';
+
+        if (allComments.length === 0) {
+            commentsContainer.innerHTML = 'Комментарии не найдены.';
+            displayError(null);
+        } else {
+            let filteredComments = allComments;
+            if (filterAuthor) {
+                filteredComments = filteredComments.filter(comment => comment.author.toLowerCase().includes(filterAuthor));
+            }
+            if (searchPhrase) {
+                filteredComments = filteredComments.filter(comment =>
+                    comment.text.toLowerCase().includes(searchPhrase) ||
+                    comment.replies?.some(reply => reply.text.toLowerCase().includes(searchPhrase))
+                );
+            }
+            if (startTime && endTime) {
+                filteredComments = filteredComments.filter(comment => {
+                    const publishedAt = new Date(comment.publishedAt);
+                    const startDate = new Date(startTime);
+                    const endDate = new Date(endTime);
+                    return publishedAt >= startDate && publishedAt <= endDate;
+                });
+            }
+            currentComments = filteredComments;
+            displayComments(filteredComments);
+            displayError(null);
+        }
+
+    } catch (error) {
+        loadingMessage.style.display = 'none';
+        displayError(`Ошибка при получении комментариев: ${error.message}`);
+    }
+}
+
+
+
+getCommentsButton.addEventListener('click', getComments);
+
+    </script>
+</body>
+
+</html>
