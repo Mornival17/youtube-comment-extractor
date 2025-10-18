@@ -40,7 +40,7 @@ async function getYoutubeComments(apiKey, videoId, maxResults = 500) {
 }
 
 async function main() {
-    const API_KEY = 'AIzaSyAKY71C8ythnerVGq4TUVAAdab9Sc06PL0'; // Замените на ваш API ключ
+    const API_KEY = 'YUOR_KEY'; // Замените на ваш API ключ
     const VIDEO_ID = 'XcmNv1UwYnk'; // Замените на ID видео
 
 
@@ -61,6 +61,7 @@ async function main() {
 }
 
 main();
+
 
 
 
